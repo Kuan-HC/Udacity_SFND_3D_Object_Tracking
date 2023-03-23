@@ -20,7 +20,7 @@ void cropLidarPoints(std::vector<LidarPoint> &lidarPoints, float minX, float max
        }
     }
 
-    lidarPoints = newLidarPts;
+    lidarPoints = move(newLidarPts);
 }
 
 
