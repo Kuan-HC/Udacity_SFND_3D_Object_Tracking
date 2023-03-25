@@ -250,19 +250,19 @@ int main(int argc, const char *argv[])
             //// TASK FP.1 -> match list of 3D objects (vector<BoundingBox>) between current and previous frame (implement ->matchBoundingBoxes)
             map<int, int> bbBestMatches;
             matchBoundingBoxes(matches, bbBestMatches, dataBuffer.secondLast(), dataBuffer.last()); // associate bounding boxes between current and previous frame using keypoint matches
-            
-            /* For debug*/
-            // for(const auto& bestMatch : bbBestMatches){
-            //     cout << "[+] prevMatchBoxId: " << bestMatch.first << " currMatchBoxId: " << bestMatch.second << endl;
-            // }
-            
+
             //// EOF STUDENT ASSIGNMENT
 
             // store matches in current data frame
             
-            dataBuffer.last().bbMatches = bbBestMatches;
+            dataBuffer.last().bbMatches = move(bbBestMatches);
 
-            break;
+            /* for debug*/
+            // for(const auto& bestMatch : dataBuffer.last().bbMatches){
+            //     cout << "[+] prevMatchBoxId: " << bestMatch.first << " currMatchBoxId: " << bestMatch.second << endl;
+            // }
+            /* for debug*/
+            
 
             cout << "#8 : TRACK 3D OBJECT BOUNDING BOXES done" << endl;
 
@@ -278,6 +278,7 @@ int main(int argc, const char *argv[])
                     if (it1->second == it2->boxID) // check wether current match partner corresponds to this BB
                     {
                         currBB = &(*it2);
+                        
                     }
                 }
 
@@ -285,9 +286,10 @@ int main(int argc, const char *argv[])
                 {
                     if (it1->first == it2->boxID) // check wether current match partner corresponds to this BB
                     {
-                        prevBB = &(*it2);
+                        prevBB = &(*it2);                       
                     }
                 }
+
 
                 // compute TTC for current match
                 if (currBB->lidarPoints.size() > 0 && prevBB->lidarPoints.size() > 0) // only compute TTC if we have Lidar points

@@ -146,16 +146,42 @@ void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPo
     // ...
 }
 
-void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
-                     std::vector<LidarPoint> &lidarPointsCurr, double frameRate, double &TTC)
+void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev, std::vector<LidarPoint> &lidarPointsCurr, double frameRate, double &TTC)
 {
-    // ...
+    /**
+     * @brief
+     * calculate average distance in previous and current frame
+     * CVM to get TTC
+    */
+    double avgXprev = 0.0;
+    for(const auto& point : lidarPointsPrev)
+        avgXprev += point.x;
+    
+    avgXprev /= lidarPointsPrev.size();
+
+    double avgXcurr = 0.0;
+    for(const auto& point : lidarPointsCurr)
+        avgXcurr += point.x;
+    avgXcurr /= lidarPointsCurr.size();
+
+    if(avgXprev < avgXcurr){ //preceding car is leaving
+        TTC = -1.0;
+        return;
+    }
+    
+    //cout << "avgXprev: " << avgXprev << "avgXcurr: " << avgXcurr << endl;
+
+    double&& dt = 1.0 / frameRate;
+    double&& speed = (avgXprev - avgXcurr) / dt;
+
+    TTC = avgXcurr / speed;    
 }
 
 
 void matchBoundingBoxes(std::vector<cv::DMatch> &matches, std::map<int, int> &bbBestMatches, DataFrame &prevFrame, DataFrame &currFrame)
 {
     /**
+     * @brief
      * use matches to find the links between bounding box in previous and current frame
      * consider a point could fall in multiple bounding boxes
      * use a 2D array to count how many points fall in previous and curr frames bounding boxes
@@ -179,7 +205,7 @@ void matchBoundingBoxes(std::vector<cv::DMatch> &matches, std::map<int, int> &bb
             if (prevFrame.boundingBoxes[prevBoxId].roi.contains(prevKpt.pt) != true)
                 continue;
             
-            for (int currBoxId = 0; currBoxId < currBoxlen; ++j){
+            for (int currBoxId = 0; currBoxId < currBoxlen; ++currBoxId){
                 if (currFrame.boundingBoxes[currBoxId].roi.contains(currKpt.pt) == true)
                     ++count[prevBoxId][currBoxId];
             }             
@@ -199,6 +225,6 @@ void matchBoundingBoxes(std::vector<cv::DMatch> &matches, std::map<int, int> &bb
         }
         
         if(bestCurrBoxId != -1)
-            bbBestMatches[prevBoxId] = bestCurrBoxId;
+            bbBestMatches[prevFrame.boundingBoxes[prevBoxId].boxID] = currFrame.boundingBoxes[bestCurrBoxId].boxID;
     }
 }
