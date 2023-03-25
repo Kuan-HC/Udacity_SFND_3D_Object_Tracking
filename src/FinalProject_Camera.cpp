@@ -169,7 +169,7 @@ int main(int argc, const char *argv[])
         clusterLidarWithROI(dataBuffer.last().boundingBoxes, dataBuffer.last().lidarPoints, shrinkFactor, P_rect_00, R_rect_00, RT);
 
         // Visualize 3D objects
-        bVis = true;
+        bVis = false;
         if (bVis)
         {
             show3DObjects(dataBuffer.last().boundingBoxes, cv::Size(4.0, 20.0), cv::Size(1000, 1000), true);
@@ -179,7 +179,7 @@ int main(int argc, const char *argv[])
         cout << "#4 : CLUSTER LIDAR POINT CLOUD done" << endl;
 
         // REMOVE THIS LINE BEFORE PROCEEDING WITH THE FINAL PROJECT
-        continue; // skips directly to the next image without processing what comes beneath
+        //continue; // skips directly to the next image without processing what comes beneath
 
         /* DETECT IMAGE KEYPOINTS */
 
@@ -228,7 +228,6 @@ int main(int argc, const char *argv[])
 
         if (dataBuffer.size() > 1) // wait until at least two images have been processed
         {
-
             /* MATCH KEYPOINT DESCRIPTORS */
 
             vector<cv::DMatch> matches;
@@ -251,10 +250,19 @@ int main(int argc, const char *argv[])
             //// TASK FP.1 -> match list of 3D objects (vector<BoundingBox>) between current and previous frame (implement ->matchBoundingBoxes)
             map<int, int> bbBestMatches;
             matchBoundingBoxes(matches, bbBestMatches, dataBuffer.secondLast(), dataBuffer.last()); // associate bounding boxes between current and previous frame using keypoint matches
+            
+            /* For debug*/
+            // for(const auto& bestMatch : bbBestMatches){
+            //     cout << "[+] prevMatchBoxId: " << bestMatch.first << " currMatchBoxId: " << bestMatch.second << endl;
+            // }
+            
             //// EOF STUDENT ASSIGNMENT
 
             // store matches in current data frame
+            
             dataBuffer.last().bbMatches = bbBestMatches;
+
+            break;
 
             cout << "#8 : TRACK 3D OBJECT BOUNDING BOXES done" << endl;
 
