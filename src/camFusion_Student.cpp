@@ -136,53 +136,135 @@ void show3DObjects(std::vector<BoundingBox> &boundingBoxes, cv::Size worldSize, 
 // associate a given bounding box with the keypoints it contains
 void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPoint> &kptsCurr, std::vector<cv::DMatch> &kptMatches)
 {
-    // ...
+    /**
+     * @brief: 
+     * 1. Loop matched points, if log points in bounding box and calculate mean distance
+     * 2. set a distance threshold based on mean distance value e.g.: 1.2 * mean distance value
+     *    loop the points loged in step 1, if distance is lower than threshold, add to boundingBox keypoints  
+    */
+    vector<pair<double,std::vector<cv::DMatch>::iterator>> kptInBoundingBox;
+
+    double distThr = 0.0;
+    for(std::vector<cv::DMatch>::iterator itr = kptMatches.begin(); itr != kptMatches.end(); ++itr){
+
+        const cv::KeyPoint &prevKpt = kptsPrev[itr -> queryIdx];
+        const cv::KeyPoint &currKpt = kptsCurr[itr -> trainIdx];
+
+        if(boundingBox.roi.contains(currKpt.pt) == true){
+            double&& tempDist = cv::norm(currKpt.pt-prevKpt.pt);
+            kptInBoundingBox.emplace_back(tempDist, itr);
+            distThr += tempDist;
+        }
+    }
+
+    distThr /= kptInBoundingBox.size();
+    distThr *= 1.2;
+
+    for(pair<double,std::vector<cv::DMatch>::iterator> kpt : kptInBoundingBox){
+        if(kpt.first < distThr){
+            const cv::KeyPoint &currKpt = kptsCurr[kpt.second->trainIdx];
+            
+            boundingBox.keypoints.emplace_back(currKpt);
+            boundingBox.kptMatches.emplace_back(*kpt.second);
+        }
+    }
+
+    // for(const cv::DMatch& kptMatch : kptMatches){
+
+    //     const cv::KeyPoint &prevKpt = kptsPrev[kptMatch.queryIdx];
+    //     const cv::KeyPoint &currKpt = kptsCurr[kptMatch.trainIdx];
+
+    //     if(boundingBox.roi.contains(currKpt.pt) == true){
+    //         double&& tempDist = cv::norm(currKpt.pt-prevKpt.pt);
+    //         meanDist += tempDist;
+    //     }
+    // }
 }
 
 // Compute time-to-collision (TTC) based on keypoint correspondences in successive images
 void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPoint> &kptsCurr,
                       std::vector<cv::DMatch> kptMatches, double frameRate, double &TTC, cv::Mat *visImg)
 {
-    // ...
+    // compute distance ratios between all matched keypoints
+    vector<double> distRatios; // stores the distance ratios for all keypoints between curr. and prev. frame
+    for (auto it1 = kptMatches.begin(); it1 != kptMatches.end() - 1; ++it1)
+    { // outer kpt. loop
+
+        // get current keypoint and its matched partner in the prev. frame
+        cv::KeyPoint kpOuterCurr = kptsCurr.at(it1->trainIdx);
+        cv::KeyPoint kpOuterPrev = kptsPrev.at(it1->queryIdx);
+
+        for (auto it2 = kptMatches.begin() + 1; it2 != kptMatches.end(); ++it2)
+        { // inner kpt.-loop
+
+            double minDist = 100.0; // min. required distance
+
+            // get next keypoint and its matched partner in the prev. frame
+            cv::KeyPoint kpInnerCurr = kptsCurr.at(it2->trainIdx);
+            cv::KeyPoint kpInnerPrev = kptsPrev.at(it2->queryIdx);
+
+            // compute distances and distance ratios
+            double distCurr = cv::norm(kpOuterCurr.pt - kpInnerCurr.pt);
+            double distPrev = cv::norm(kpOuterPrev.pt - kpInnerPrev.pt);
+
+            if (distPrev > std::numeric_limits<double>::epsilon() && distCurr >= minDist)
+            { // avoid division by zero
+
+                double distRatio = distCurr / distPrev;
+                distRatios.push_back(distRatio);
+            }
+        } // eof inner loop over all matched kpts
+    }     // eof outer loop over all matched kpts
+
+    // only continue if list of distance ratios is not empty
+    if (distRatios.size() == 0)
+    {
+        TTC = NAN;
+        return;
+    }
+
+    std::sort(distRatios.begin(), distRatios.end());
+    long medIndex = floor(distRatios.size() / 2.0);
+    double medDistRatio = distRatios.size() % 2 == 0 ? (distRatios[medIndex - 1] + distRatios[medIndex]) / 2.0 : distRatios[medIndex]; // compute median dist. ratio to remove outlier influence
+
+    double dT = 1 / frameRate;
+    TTC = -dT / (1 - medDistRatio);
 }
 
 void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev, std::vector<LidarPoint> &lidarPointsCurr, double frameRate, double &TTC)
 {
     /**
-     * @brief
-     * calculate average distance in previous and current frame
+     * @brief:calculate average distance in previous and current frame
      * CVM to get TTC
     */
-    double avgXprev = 0.0;
+    double prevMeanDist = 0.0;
     for(const auto& point : lidarPointsPrev)
-        avgXprev += point.x;
-    
-    avgXprev /= lidarPointsPrev.size();
+        prevMeanDist += point.x;    
+    prevMeanDist /= lidarPointsPrev.size();
 
-    double avgXcurr = 0.0;
+    double currMeanDist = 0.0;
     for(const auto& point : lidarPointsCurr)
-        avgXcurr += point.x;
-    avgXcurr /= lidarPointsCurr.size();
+        currMeanDist += point.x;
+    currMeanDist /= lidarPointsCurr.size();
 
-    if(avgXprev < avgXcurr){ //preceding car is leaving
-        TTC = -1.0;
+    if(prevMeanDist < currMeanDist){ //preceding car is leaving
+        TTC = NAN;
         return;
     }
     
-    //cout << "avgXprev: " << avgXprev << "avgXcurr: " << avgXcurr << endl;
+    //cout << "prevMeanDist: " << prevMeanDist << "currMeanDist: " << currMeanDist << endl;
 
     double&& dt = 1.0 / frameRate;
-    double&& speed = (avgXprev - avgXcurr) / dt;
+    double&& speed = (prevMeanDist - currMeanDist) / dt;
 
-    TTC = avgXcurr / speed;    
+    TTC = currMeanDist / speed;    
 }
 
 
 void matchBoundingBoxes(std::vector<cv::DMatch> &matches, std::map<int, int> &bbBestMatches, DataFrame &prevFrame, DataFrame &currFrame)
 {
     /**
-     * @brief
-     * use matches to find the links between bounding box in previous and current frame
+     * @brief: use matches to find the links between bounding box in previous and current frame
      * consider a point could fall in multiple bounding boxes
      * use a 2D array to count how many points fall in previous and curr frames bounding boxes
      * pick pairs in each row with highest scores
