@@ -138,9 +138,10 @@ void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint
 {
     /**
      * @brief: 
-     * 1. Loop matched points, if log points in bounding box and calculate mean distance
-     * 2. set a distance threshold based on mean distance value e.g.: 1.2 * mean distance value
-     *    loop the points loged in step 1, if distance is lower than threshold, add to boundingBox keypoints  
+     * 1. Loop through the matched points and check if they are inside the bounding box
+     * 2. Log the points that are inside the bounding box and compute their distance
+     * 3. Set a distance threshold based on the mean distance value, for example 1.2 times the mean distance value
+     * 4. Loop through the points logged in step 1 and add them to the bounding box keypoints if their distance is lower than the threshold
     */
     vector<pair<double,std::vector<cv::DMatch>::iterator>> kptInBoundingBox;
 
@@ -168,17 +169,6 @@ void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint
             boundingBox.kptMatches.emplace_back(*kpt.second);
         }
     }
-
-    // for(const cv::DMatch& kptMatch : kptMatches){
-
-    //     const cv::KeyPoint &prevKpt = kptsPrev[kptMatch.queryIdx];
-    //     const cv::KeyPoint &currKpt = kptsCurr[kptMatch.trainIdx];
-
-    //     if(boundingBox.roi.contains(currKpt.pt) == true){
-    //         double&& tempDist = cv::norm(currKpt.pt-prevKpt.pt);
-    //         meanDist += tempDist;
-    //     }
-    // }
 }
 
 // Compute time-to-collision (TTC) based on keypoint correspondences in successive images
@@ -234,8 +224,10 @@ void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPo
 void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev, std::vector<LidarPoint> &lidarPointsCurr, double frameRate, double &TTC)
 {
     /**
-     * @brief:calculate average distance in previous and current frame
-     * CVM to get TTC
+     * @brief:
+     * 1. Compute the mean x distance in previous and current frame to alleviate outliers and noise
+     * 2. Use the difference between the average x distance in the previous and current frame 
+     * 3. Divide the current mean distance by the velocity to get the TTC
     */
     double prevMeanDist = 0.0;
     for(const auto& point : lidarPointsPrev)
@@ -264,10 +256,11 @@ void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev, std::vector<Lidar
 void matchBoundingBoxes(std::vector<cv::DMatch> &matches, std::map<int, int> &bbBestMatches, DataFrame &prevFrame, DataFrame &currFrame)
 {
     /**
-     * @brief: use matches to find the links between bounding box in previous and current frame
-     * consider a point could fall in multiple bounding boxes
-     * use a 2D array to count how many points fall in previous and curr frames bounding boxes
-     * pick pairs in each row with highest scores
+     * @brief: 
+     * 1. Use matches to find the links between bounding boxes in previous and current frame
+     * 2. Consider a point could fall in multiple bounding boxes, use a 2D array to count how
+     *    many points fall in previous and current frames bounding boxes
+     * 3. Pick pairs in each row with highest scores
      */
     int &&prevBoxlen = prevFrame.boundingBoxes.size();
     int &&currBoxlen = currFrame.boundingBoxes.size();
