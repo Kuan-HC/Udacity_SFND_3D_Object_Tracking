@@ -110,7 +110,7 @@ int main(int argc, const char *argv[])
 
     // Detector and descriptor configuration
     vector<string> detectorTypes = {"SHITOMASI", "HARRIS", "FAST", "BRISK", "ORB", "AKAZE", "SIFT"};
-    string detectorType = detectorTypes[0];
+    string detectorType = detectorTypes[2];
     cout << "[+] detectorType: " << detectorType << endl;
 
     vector<string> descriptorsTypes = {"BRISK", "BRIEF", "ORB", "FREAK", "AKAZE", "SIFT"};
@@ -309,6 +309,9 @@ int main(int argc, const char *argv[])
                     //// EOF STUDENT ASSIGNMENT
 
                     bVis = true;
+                    static double worst = 0.0;
+                    worst = max(worst, fabs(ttcLidar - ttcCamera));
+
                     if (bVis)
                     {
                         cv::Mat visImg = dataBuffer.last().cameraImg.clone();
@@ -318,6 +321,7 @@ int main(int argc, const char *argv[])
                         char str[200];
                         sprintf(str, "TTC Lidar : %f s, TTC Camera : %f s", ttcLidar, ttcCamera);
                         putText(visImg, str, cv::Point2f(80, 50), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0, 0, 255));
+                        cout << "[+] worst difference: " << worst << endl;
 
                         string windowName = "Final Results : TTC";
                         cv::namedWindow(windowName, 4);

@@ -67,3 +67,21 @@ The figures above show how we select the relevant lidar points for this task. Id
 
 ### FP.6 Performance Evaluation 2
 <b>Run several detector / descriptor combinations and look at the differences in TTC estimation. Find out which methods perform best and also include several examples where camera-based TTC estimation is way off. As with Lidar, describe your observations again and also look into potential reasons. </b>
+
+<b> Max Lidar and Camera TTC Difference (s) </b>
+
+| Detector\Descriptor | BRISK | BRIEF | ORB | FREAK | AKAZE | SIFT |
+| ---                 | :---  | :---  |:--- |:---   |:---   |:---  |
+| SHITOMASI           | 23.72  | 6.64   | 3.57 | 6.36   | -     | 5.43  |
+| HARRIS              | 13.73   | 16.8   | inf | 5.02   | -     | 40.15  |
+| FAST                | 26.84   | 79.06   | 13.47 | 5.69   | -     | 30.75  |
+| BRISK               | 13.2  | 13.28  | 7.84| 11.62  | -     | 23.01 |
+| ORB                 | 5406   | 259.2   | 22.67 | inf   | -     | inf  |
+| AKAZE               | 2.92  | 3.24  | 3.22| 2.49  | 3.77  |4.31  |
+| SIFT                | 5.6   | 7.72   | -   | 5.62   | -     |4.39   |
+
+The top three detector descriptor combination are Akaze-Freak, Akaze-Brisk and Akaze - Orb.
+The key factor of calculating camera TTC is the matched key points. A bad key point matched could lead to unstable camera TTC estimation as shown in figures below.
+
+<img src="images/d_1.png" width="600"/>  
+<img src="images/d_2.png" width="600"/> 
