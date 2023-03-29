@@ -66,7 +66,8 @@ By removing these outliers, we can reduce the noise and improve the accuracy of 
 ### FP.5 Performance Evaluation 1
 > Find examples where the TTC estimate of the Lidar sensor does not seem plausible. Describe your observations and provide a sound argumentation why you think this happened.</b>  
 
-
+<img src="images/distance_graph.png" width="400"/>
+<img src="images/ttc_graph.png" width="400"/>
 
 |Data\Frame| 0 - 1 | 1 - 2 | 2 - 3 | 3 - 4 | 4 - 5 | 5 - 6 | 6 - 7 | 7 - 8 | 8 - 9 | 9 - 10|10 - 11|11 - 12|12 - 13|13 - 14|14 - 15|15 - 16|16 - 17|17 - 18| 
 |:---      |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |
@@ -75,11 +76,15 @@ By removing these outliers, we can reduce the noise and improve the accuracy of 
 |Raw TTC   |13.03  |7.879  |9.115  |5.061  |4.954  |5.034  |7.756  |5.991  |6.518  |7.226  |3.097  |7.235  |6.335  |7.697  |6.044  |2.854  |7.073  |5.799  |
 |Filtered TTC|13.03|7.575  |10.59  |10.67  |8.493  |6.957  |7.756  |8.482  |9.254  |8.860  |7.927  |7.612  |6.878  |8.043  |6.671  |7.064  |7.702  |6.164  |
 
+At fram 10-11 and 15-16, the raw Lidar base TTC seem not plausible, this could be due to two factors. One factor is the noise in the Lidar data, which can cause outliers and affect the estimation of the closest point. Normal distribution is used to eliminate outliers in data analysis. The image below shows the lidar points before and after filtered using this method. 
 
 <img src="images/rawLidarPoints.gif" width="150"/>
 <img src="images/filterLidarPoints.gif" width="150"/> 
 
 <b>Left:</b> raw lidar points &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Right:</b> filtered lidar points  
+
+Another factor is the constant velocity model, it assume the objecte is at constant speed. When the velocity of an object changes abruptly, it can cause errors in the tracking algorithm, which assumes a smooth and continuous motion. This can lead to incorrect predictions of the object's future position and can result in tracking failures.
+
 
 ### FP.6 Performance Evaluation 2
 <b>Run several detector / descriptor combinations and look at the differences in TTC estimation. Find out which methods perform best and also include several examples where camera-based TTC estimation is way off. As with Lidar, describe your observations again and also look into potential reasons. </b>
