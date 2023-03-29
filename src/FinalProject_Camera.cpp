@@ -110,7 +110,7 @@ int main(int argc, const char *argv[])
 
     // Detector and descriptor configuration
     vector<string> detectorTypes = {"SHITOMASI", "HARRIS", "FAST", "BRISK", "ORB", "AKAZE", "SIFT"};
-    string detectorType = detectorTypes[2];
+    string detectorType = detectorTypes[0];
     cout << "[+] detectorType: " << detectorType << endl;
 
     vector<string> descriptorsTypes = {"BRISK", "BRIEF", "ORB", "FREAK", "AKAZE", "SIFT"};
@@ -233,7 +233,7 @@ int main(int argc, const char *argv[])
             vector<cv::DMatch> matches;
             string matcherType = "MAT_BF";        // MAT_BF, MAT_FLANN
             string descriptorType = "DES_BINARY"; // DES_BINARY, DES_HOG
-            string selectorType = "SEL_NN";       // SEL_NN, SEL_KNN
+            string selectorType = "SEL_KNN";       // SEL_NN, SEL_KNN
 
             matchDescriptors(dataBuffer.secondLast().keypoints, dataBuffer.last().keypoints,
                              dataBuffer.secondLast().descriptors, dataBuffer.last().descriptors,
@@ -277,8 +277,7 @@ int main(int argc, const char *argv[])
                 {
                     if (it1->second == it2->boxID) // check wether current match partner corresponds to this BB
                     {
-                        currBB = &(*it2);
-                        
+                        currBB = &(*it2);                        
                     }
                 }
 
@@ -298,13 +297,12 @@ int main(int argc, const char *argv[])
                     //// TASK FP.2 -> compute time-to-collision based on Lidar data (implement -> computeTTCLidar)
                     double ttcLidar;
                     computeTTCLidar(prevBB->lidarPoints, currBB->lidarPoints, sensorFrameRate, ttcLidar);
-                    cout << "[+] imgIndex: "<< imgIndex << endl;
-                        //// EOF STUDENT ASSIGNMENT
+                    //// EOF STUDENT ASSIGNMENT
 
-                        //// STUDENT ASSIGNMENT
-                        //// TASK FP.3 -> assign enclosed keypoint matches to bounding box (implement -> clusterKptMatchesWithROI)
-                        //// TASK FP.4 -> compute time-to-collision based on camera (implement -> computeTTCCamera)
-                        double ttcCamera;
+                    //// STUDENT ASSIGNMENT
+                    //// TASK FP.3 -> assign enclosed keypoint matches to bounding box (implement -> clusterKptMatchesWithROI)
+                    //// TASK FP.4 -> compute time-to-collision based on camera (implement -> computeTTCCamera)
+                    double ttcCamera;
                     //clusterKptMatchesWithROI(*currBB, dataBuffer.secondLast().keypoints, dataBuffer.last().keypoints, dataBuffer.last().kptMatches);
                     //computeTTCCamera(dataBuffer.secondLast().keypoints, dataBuffer.last().keypoints, currBB->kptMatches, sensorFrameRate, ttcCamera);
                     //// EOF STUDENT ASSIGNMENT

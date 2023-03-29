@@ -240,7 +240,11 @@ pair<double, double> normalDistribution(const std::vector<LidarPoint> &points){
 {
     /**
      * @brief:
-     * 1. normal distribution - filter out nonliners
+     * One way to filter out outliers from a data set is to use the normal distribution.
+     * The normal distribution is a bell-shaped curve that describes how most values are clustered around the mean.
+     * To identify outliers using the normal distribution, we can use the standard deviation, which measures how much the values vary from the mean.
+     * A common rule of thumb is to consider any value that is more than three standard deviations away from the mean as an outlier.
+     * By removing these outliers, we can reduce the noise and improve the accuracy of our analysis.
     */
 
     sort(lidarPointsPrev.begin(), lidarPointsPrev.end(), [](const LidarPoint &lhs, const LidarPoint &rhs){ return lhs.x < rhs.x; });
