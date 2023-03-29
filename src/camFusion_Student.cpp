@@ -221,35 +221,69 @@ void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPo
     TTC = -dT / (1 - medDistRatio);
 }
 
-void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev, std::vector<LidarPoint> &lidarPointsCurr, double frameRate, double &TTC)
+pair<double, double> normalDistribution(const std::vector<LidarPoint> &points){
+    double mean = 0.0;
+    for(const LidarPoint& point : points)
+        mean += point.x;
+    mean /= points.size();
+
+    double stdDev = 0.0;
+    for (const LidarPoint &point : points)
+        stdDev += pow((mean - point.x), 2);
+
+    stdDev = sqrt(stdDev / points.size());
+
+    return pair<double,double>(mean, stdDev);
+}
+
+    void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev, std::vector<LidarPoint> &lidarPointsCurr, double frameRate, double &TTC)
 {
     /**
      * @brief:
-     * 1. Compute the mean x distance in previous and current frame to alleviate outliers and noise
-     * 2. Use the difference between the average x distance in the previous and current frame 
-     * 3. Divide the current mean distance by the velocity to get the TTC
+     * 1. normal distribution - filter out nonliners
     */
-    double prevMeanDist = 0.0;
-    for(const auto& point : lidarPointsPrev)
-        prevMeanDist += point.x;    
-    prevMeanDist /= lidarPointsPrev.size();
 
-    double currMeanDist = 0.0;
-    for(const auto& point : lidarPointsCurr)
-        currMeanDist += point.x;
-    currMeanDist /= lidarPointsCurr.size();
+    sort(lidarPointsPrev.begin(), lidarPointsPrev.end(), [](const LidarPoint &lhs, const LidarPoint &rhs){ return lhs.x < rhs.x; });
+    sort(lidarPointsCurr.begin(), lidarPointsCurr.end(), [](const LidarPoint &lhs, const LidarPoint &rhs){ return lhs.x < rhs.x; });
 
-    if(prevMeanDist < currMeanDist){ //preceding car is leaving
-        TTC = NAN;
-        return;
+    pair<double, double> prevNormal = normalDistribution(lidarPointsPrev);
+    pair<double, double> currNormal = normalDistribution(lidarPointsCurr);
+    double minXPrevRaw = lidarPointsPrev.front().x;
+    double minXCurrRaw = lidarPointsCurr.front().x;
+
+    double scale = 1.0;
+
+    std::vector<LidarPoint> prevPointsFilter;
+    double&& lowThr = prevNormal.first - scale * prevNormal.second;
+    double&& highThr = prevNormal.first + scale * prevNormal.second;
+
+    for (const LidarPoint &point : lidarPointsPrev)
+    {
+        if(point.x >= lowThr && point.x <= highThr)
+            prevPointsFilter.emplace_back(point);
     }
-    
-    //cout << "prevMeanDist: " << prevMeanDist << "currMeanDist: " << currMeanDist << endl;
 
-    double&& dt = 1.0 / frameRate;
-    double&& speed = (prevMeanDist - currMeanDist) / dt;
+    std::vector<LidarPoint> currPointsFilter;
+    lowThr = currNormal.first - scale * currNormal.second;
+    highThr = currNormal.first + scale * currNormal.second;
 
-    TTC = currMeanDist / speed;    
+    for (const LidarPoint &point : lidarPointsCurr)
+    {
+        if (point.x >= lowThr && point.x <= highThr)
+            currPointsFilter.emplace_back(point);
+    }
+
+    double minXPrev = prevPointsFilter.front().x;
+    double minXCurr = currPointsFilter.front().x;
+
+    double &&dt = 1.0 / frameRate;
+    double &&speed = (minXPrev - minXCurr) / dt;  //or minXPrevRas  minXCurrRaw 
+
+    TTC = minXCurr / speed;
+
+    lidarPointsPrev = move(prevPointsFilter);
+    lidarPointsCurr = move(currPointsFilter);
+    cout << "[+] Min. distance raw data: " << minXCurrRaw << " min. distance filter: " << minXCurr << endl;
 }
 
 

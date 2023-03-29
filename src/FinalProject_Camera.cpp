@@ -298,14 +298,15 @@ int main(int argc, const char *argv[])
                     //// TASK FP.2 -> compute time-to-collision based on Lidar data (implement -> computeTTCLidar)
                     double ttcLidar;
                     computeTTCLidar(prevBB->lidarPoints, currBB->lidarPoints, sensorFrameRate, ttcLidar);
-                    //// EOF STUDENT ASSIGNMENT
+                    cout << "[+] imgIndex: "<< imgIndex << endl;
+                        //// EOF STUDENT ASSIGNMENT
 
-                    //// STUDENT ASSIGNMENT
-                    //// TASK FP.3 -> assign enclosed keypoint matches to bounding box (implement -> clusterKptMatchesWithROI)
-                    //// TASK FP.4 -> compute time-to-collision based on camera (implement -> computeTTCCamera)
-                    double ttcCamera;
-                    clusterKptMatchesWithROI(*currBB, dataBuffer.secondLast().keypoints, dataBuffer.last().keypoints, dataBuffer.last().kptMatches);
-                    computeTTCCamera(dataBuffer.secondLast().keypoints, dataBuffer.last().keypoints, currBB->kptMatches, sensorFrameRate, ttcCamera);
+                        //// STUDENT ASSIGNMENT
+                        //// TASK FP.3 -> assign enclosed keypoint matches to bounding box (implement -> clusterKptMatchesWithROI)
+                        //// TASK FP.4 -> compute time-to-collision based on camera (implement -> computeTTCCamera)
+                        double ttcCamera;
+                    //clusterKptMatchesWithROI(*currBB, dataBuffer.secondLast().keypoints, dataBuffer.last().keypoints, dataBuffer.last().kptMatches);
+                    //computeTTCCamera(dataBuffer.secondLast().keypoints, dataBuffer.last().keypoints, currBB->kptMatches, sensorFrameRate, ttcCamera);
                     //// EOF STUDENT ASSIGNMENT
 
                     bVis = true;
