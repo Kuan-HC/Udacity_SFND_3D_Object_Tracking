@@ -110,14 +110,16 @@ int main(int argc, const char *argv[])
 
     // Detector and descriptor configuration
     vector<string> detectorTypes = {"SHITOMASI", "HARRIS", "FAST", "BRISK", "ORB", "AKAZE", "SIFT"};
-    string detectorType = detectorTypes[0];
+    string detectorType = detectorTypes[5];
     cout << "[+] detectorType: " << detectorType << endl;
 
     vector<string> descriptorsTypes = {"BRISK", "BRIEF", "ORB", "FREAK", "AKAZE", "SIFT"};
-    string descriptorType = descriptorsTypes[0]; // BRIEF, ORB, FREAK, AKAZE, SIFT
+    string descriptorType = descriptorsTypes[5]; // BRIEF, ORB, FREAK, AKAZE, SIFT
     cout << "[+] descriptorType: " << descriptorType << endl;
 
     /* MAIN LOOP OVER ALL IMAGES */
+    // for FP.6
+    //vector<double> diffTTC;
 
     for (size_t imgIndex = 0; imgIndex <= imgEndIndex - imgStartIndex; imgIndex += imgStepWidth)
     {
@@ -232,8 +234,8 @@ int main(int argc, const char *argv[])
 
             vector<cv::DMatch> matches;
             string matcherType = "MAT_BF";        // MAT_BF, MAT_FLANN
-            string descriptorType = "DES_BINARY"; // DES_BINARY, DES_HOG
-            string selectorType = "SEL_KNN";       // SEL_NN, SEL_KNN
+            string descriptorType = "DES_HOG"; // DES_BINARY, DES_HOG
+            string selectorType = "SEL_NN";       // SEL_NN, SEL_KNN
 
             matchDescriptors(dataBuffer.secondLast().keypoints, dataBuffer.last().keypoints,
                              dataBuffer.secondLast().descriptors, dataBuffer.last().descriptors,
@@ -303,13 +305,14 @@ int main(int argc, const char *argv[])
                     //// TASK FP.3 -> assign enclosed keypoint matches to bounding box (implement -> clusterKptMatchesWithROI)
                     //// TASK FP.4 -> compute time-to-collision based on camera (implement -> computeTTCCamera)
                     double ttcCamera;
-                    //clusterKptMatchesWithROI(*currBB, dataBuffer.secondLast().keypoints, dataBuffer.last().keypoints, dataBuffer.last().kptMatches);
-                    //computeTTCCamera(dataBuffer.secondLast().keypoints, dataBuffer.last().keypoints, currBB->kptMatches, sensorFrameRate, ttcCamera);
+                    clusterKptMatchesWithROI(*currBB, dataBuffer.secondLast().keypoints, dataBuffer.last().keypoints, dataBuffer.last().kptMatches);
+                    computeTTCCamera(dataBuffer.secondLast().keypoints, dataBuffer.last().keypoints, currBB->kptMatches, sensorFrameRate, ttcCamera);
                     //// EOF STUDENT ASSIGNMENT
 
-                    bVis = true;
-                    static double worst = 0.0;
-                    worst = max(worst, fabs(ttcLidar - ttcCamera));
+                    bVis = false;
+                   
+                    // for FP.6
+                    //diffTTC.push_back(ttcLidar - ttcCamera);
 
                     if (bVis)
                     {
@@ -320,7 +323,7 @@ int main(int argc, const char *argv[])
                         char str[200];
                         sprintf(str, "TTC Lidar : %f s, TTC Camera : %f s", ttcLidar, ttcCamera);
                         putText(visImg, str, cv::Point2f(80, 50), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0, 0, 255));
-                        cout << "[+] worst difference: " << worst << endl;
+                        
 
                         string windowName = "Final Results : TTC";
                         cv::namedWindow(windowName, 4);
@@ -335,6 +338,9 @@ int main(int argc, const char *argv[])
         }
 
     } // eof loop over all images
-
+    //for FP.6
+    // for(const auto& num : diffTTC)
+    //         cout << num << " ";
+    // cout << endl;
     return 0;
 }

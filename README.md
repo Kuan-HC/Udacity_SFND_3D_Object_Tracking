@@ -42,11 +42,14 @@
 >Compute the time-to-collision in second for all matched 3D objects using only Lidar measurements from the matched bounding boxes between current and previous frame.</b>  
 
 <b> Normal Distribution</b>  
-<img src="images/task2.png" width="400"/>  
-One way to filter out outliers from a data set is to use the normal distribution.
-The normal distribution is a bell-shaped curve that describes how most values are clustered around the mean.
-To identify outliers using the normal distribution, we can use the standard deviation, which measures how much the values vary from the mean.
+
+<img src="images/fp2.svg" width="400"/>  
+
+[Wiki](https://en.wikipedia.org/wiki/Normal_distribution) 
+
+Use the normal distribution Oto filter out outliers. To identify outliers using the normal distribution, we can use the standard deviation, which measures how much the values vary from the mean.
 A common rule of thumb is to consider any value that is more than three standard deviations away from the mean as an outlier.
+
 By removing these outliers, we can reduce the noise and improve the accuracy of our analysis.
 
 ### FP.3 Associate Keypoint Correspondences with Bounding Boxes
@@ -69,6 +72,8 @@ By removing these outliers, we can reduce the noise and improve the accuracy of 
 <img src="images/distance_graph.png" width="400"/>
 <img src="images/ttc_graph.png" width="400"/>
 
+[csv](images/fp5.csv)
+
 |Data\Frame| 0 - 1 | 1 - 2 | 2 - 3 | 3 - 4 | 4 - 5 | 5 - 6 | 6 - 7 | 7 - 8 | 8 - 9 | 9 - 10|10 - 11|11 - 12|12 - 13|13 - 14|14 - 15|15 - 16|16 - 17|17 - 18| 
 |:---      |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |:---   |
 |Raw data mindistance |7.913  |7.849  |7.793  |7.685  |7.638  |7.577  |7.555  |7.475  |7.434  |7.393  |7.205  |7.272  |7.194  |7.129  |7.042  |6.827  |6.896  |6.814  |
@@ -78,8 +83,7 @@ By removing these outliers, we can reduce the noise and improve the accuracy of 
 
 At fram 10-11 and 15-16, the raw Lidar base TTC seem not plausible, this could be due to two factors. One factor is the noise in the Lidar data, which can cause outliers and affect the estimation of the closest point. Normal distribution is used to eliminate outliers in data analysis. The image below shows the lidar points before and after filtered using this method. 
 
-<img src="images/rawLidarPoints.gif" width="150"/>
-<img src="images/filterLidarPoints.gif" width="150"/> 
+<img src="images/rawLidarPoints.gif" width="150"/><img src="images/filterLidarPoints.gif" width="150"/> 
 
 <b>Left:</b> raw lidar points &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Right:</b> filtered lidar points  
 
@@ -91,18 +95,9 @@ Another factor is the constant velocity model, it assume the objecte is at const
 
 <b> Max Lidar and Camera TTC Difference (s) </b>
 
-| Detector\Descriptor | BRISK | BRIEF | ORB | FREAK | AKAZE | SIFT |
-| ---                 | :---  | :---  |:--- |:---   |:---   |:---  |
-| SHITOMASI           | 23.72  | 6.64   | 3.57 | 6.36   | -     | 5.43  |
-| HARRIS              | 13.73   | 16.8   | inf | 5.02   | -     | 40.15  |
-| FAST                | 26.84   | 79.06   | 13.47 | 5.69   | -     | 30.75  |
-| BRISK               | 13.2  | 13.28  | 7.84| 11.62  | -     | 23.01 |
-| ORB                 | 5406   | 259.2   | 22.67 | inf   | -     | inf  |
-| AKAZE               | 2.92  | 3.24  | 3.22| 2.49  | 3.77  |4.31  |
-| SIFT                | 5.6   | 7.72   | -   | 5.62   | -     |4.39   |
+[CSV: Lidar and Camera TTC error in each frame](images/fp6.csv)
 
-The top three detector descriptor combination are Akaze-Freak, Akaze-Brisk and Akaze - Orb.
-The key factor of calculating camera TTC is the matched key points. A bad key point matched could lead to unstable camera TTC estimation as shown in figures below.
+<img src="images/fp6.png" width="600"/>  
 
-<img src="images/d_1.png" width="600"/>  
-<img src="images/d_2.png" width="600"/> 
+The top three detector descriptor combination are SHITOMASI-SIFT, SHITOMASI-ORB and SHITOMASI-BRIEF.
+The key factor of calculating camera TTC is the matched key points. A bad key point matched could lead to unstable camera TTC estimation.
